@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { SERVICES, MASTERY } from '../constants';
 import { Button } from '../components/Button';
+import Threads from '../components/Thread'; 
 
 const CapabilityCard: React.FC<{ service: typeof SERVICES[0]; index: number }> = ({ service, index }) => {
   const icons = [
@@ -117,9 +118,13 @@ export const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col relative overflow-hidden bg-ivory">
-      {/* Hero Section */}
+      {/* Hero Section with Threads Background */}
       <section className="relative px-6 sm:px-10 lg:px-16 pt-24 sm:pt-40 lg:pt-52 max-w-[1440px] mx-auto w-full flex flex-col">
-        <div className="max-w-6xl">
+        {/* Threads Animation Background */}
+        
+
+        {/* Hero Content - positioned above Threads */}
+        <div className="relative z-10 max-w-6xl">
           <div className="animate-fade-up">
             <h1 className="text-[clamp(2.2rem,8vw,5.5rem)] font-serif font-medium text-primary tracking-tighter leading-[1.1] mb-8 sm:mb-10 text-balance">
               Your Technical <br />
@@ -146,9 +151,10 @@ export const Home: React.FC = () => {
             </div>
           </div>
         </div>
+        
 
         {/* Statistics Block */}
-        <div className="w-full border-t border-primary/10 pt-16 sm:pt-20 pb-20 sm:pb-32 animate-fade-in delay-300">
+        <div className="relative z-10 w-full border-t border-primary/10 pt-16 sm:pt-20 pb-20 sm:pb-32 animate-fade-in delay-300">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-16 mb-16 sm:mb-20">
             <div className="lg:col-span-4">
               <span className="inline-block px-3 py-1 bg-white border border-border text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-4 rounded-sm">/partnership</span>
