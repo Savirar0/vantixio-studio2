@@ -1,152 +1,195 @@
+'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Home, User, Layers, Users, Mail, ArrowUpRight } from 'lucide-react';
-import { NAV_ITEMS } from '../constants';
+import {
+  motion,
+  MotionValue,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type SpringOptions,
+  AnimatePresence
+} from 'motion/react';
+import React, { Children, cloneElement, useEffect, useMemo, useRef, useState } from 'react';
 
-export const Navigation: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('#home');
-  const [scrolled, setScrolled] = useState(false);
+export type DockItemData = {
+  icon: React.ReactNode;
+  label: React.ReactNode;
+  onClick: () => void;
+  className?: string;
+};
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+export type DockProps = {
+  items: DockItemData[];
+  className?: string;
+  distance?: number;
+  panelHeight?: number;
+  baseItemSize?: number;
+  dockHeight?: number;
+  magnification?: number;
+  spring?: SpringOptions;
+};
 
-      const sections = ['home', 'about', 'projects', 'clients', 'contact'];
-      let current = '';
+type DockItemProps = {
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  mouseX: MotionValue<number>;
+  spring: SpringOptions;
+  distance: number;
+  baseItemSize: number;
+  magnification: number;
+};
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          // Detect active section based on proximity to center of viewport
-          if (rect.top <= window.innerHeight / 2.5 && rect.bottom >= window.innerHeight / 2.5) {
-            current = `#${section}`;
-            break;
-          }
-        }
-      }
-      
-      if (current && current !== activeSection) {
-        setActiveSection(current);
-      }
+function DockItem({
+  children,
+  className = '',
+  onClick,
+  mouseX,
+  spring,
+  distance,
+  magnification,
+  baseItemSize
+}: DockItemProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isHovered = useMotionValue(0);
+
+  const mouseDistance = useTransform(mouseX, val => {
+    const rect = ref.current?.getBoundingClientRect() ?? {
+      x: 0,
+      width: baseItemSize
     };
+    return val - rect.x - baseItemSize / 2;
+  });
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeSection]);
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    e.preventDefault();
-    const id = path.substring(1);
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      setActiveSection(path);
-    }
-  };
-
-  const getIcon = (path: string) => {
-    const size = 18;
-    const strokeWidth = 1.8;
-    switch (path) {
-      case '#home': return <Home size={size} strokeWidth={strokeWidth} />;
-      case '#about': return <User size={size} strokeWidth={strokeWidth} />;
-      case '#projects': return <Layers size={size} strokeWidth={strokeWidth} />;
-      case '#clients': return <Users size={size} strokeWidth={strokeWidth} />;
-      default: return <Mail size={size} strokeWidth={strokeWidth} />;
-    }
-  };
-
-  const activeClasses = "bg-accent text-white shadow-[0_8px_16px_-4px_rgba(44,94,99,0.4)]";
-  const inactiveClasses = "text-secondary/60 hover:text-accent hover:bg-accent/5";
+  const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
+  const size = useSpring(targetSize, spring);
 
   return (
-    <>
-      <header 
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ease-in-out ${
-          scrolled ? 'py-3 bg-white/95 backdrop-blur-md border-b border-black/5 shadow-sm' : 'py-6 bg-transparent'
-        }`}
-      >
-        <div className="max-w-[1440px] mx-auto px-5 sm:px-10 lg:px-16 flex justify-between items-center">
-          <a 
-            href="#home" 
-            onClick={(e) => handleNavClick(e, '#home')}
-            className="text-lg sm:text-2xl font-serif font-bold tracking-tight text-primary select-none cursor-pointer group"
-          >
-            Vantixio<span className="text-accent italic font-normal group-hover:not-italic transition-all">.</span>
-          </a>
-          
-          <a 
-            href="#contact" 
-            onClick={(e) => handleNavClick(e, '#contact')}
-            className="inline-flex items-center gap-2 px-4 py-1.5 sm:px-6 sm:py-2.5 bg-primary text-white text-[10px] uppercase tracking-ultra font-bold rounded-sm hover:bg-accent transition-all duration-300 group cursor-pointer active:scale-95 shadow-sm"
-          >
-            <span className="hidden xs:inline">Discovery Call</span>
-            <span className="xs:hidden">Contact</span>
-            <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </a>
-        </div>
-      </header>
-
-      {/* Floating Dock: Responsive Tuning */}
-      <div 
-        className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-[9999] w-[92%] xs:w-auto"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) / 1.5)' }}
-      >
-        <nav className="flex items-center justify-between xs:justify-center gap-1 sm:gap-2 px-1.5 py-1.5 bg-white/90 backdrop-blur-xl border border-black/10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] rounded-2xl ring-1 ring-black/5">
-          <a
-            href="#home"
-            onClick={(e) => handleNavClick(e, '#home')}
-            aria-label="Home"
-            className={`p-3 sm:p-4 rounded-xl transition-all duration-300 flex items-center justify-center flex-1 xs:flex-none cursor-pointer active:scale-90 ${
-              activeSection === '#home' ? activeClasses : inactiveClasses
-            }`}
-          >
-             {getIcon('#home')}
-          </a>
-
-          {NAV_ITEMS.map((item) => {
-             const isActive = activeSection === item.path;
-             return (
-               <a
-                 key={item.path}
-                 href={item.path}
-                 onClick={(e) => handleNavClick(e, item.path)}
-                 aria-label={item.label}
-                 className={`p-3 sm:p-4 rounded-xl transition-all duration-300 flex items-center justify-center flex-1 xs:flex-none cursor-pointer active:scale-90 ${
-                   isActive ? activeClasses : inactiveClasses
-                 }`}
-               >
-                 {getIcon(item.path)}
-               </a>
-             )
-          })}
-
-          <div className="w-[1px] h-6 bg-black/10 mx-1 hidden xs:block"></div>
-
-          <a
-             href="#contact"
-             onClick={(e) => handleNavClick(e, '#contact')}
-             aria-label="Contact"
-             className={`p-3 sm:p-4 rounded-xl transition-all duration-300 flex items-center justify-center flex-1 xs:flex-none cursor-pointer active:scale-90 ${
-               activeSection === '#contact' ? activeClasses : "text-accent hover:bg-accent/10"
-             }`}
-           >
-              <Mail size={18} strokeWidth={1.8} />
-           </a>
-        </nav>
-      </div>
-    </>
+    <motion.div
+      ref={ref}
+      style={{
+        width: size,
+        height: size
+      }}
+      onHoverStart={() => isHovered.set(1)}
+      onHoverEnd={() => isHovered.set(0)}
+      onFocus={() => isHovered.set(1)}
+      onBlur={() => isHovered.set(0)}
+      onClick={onClick}
+      className={`relative inline-flex items-center justify-center rounded-full bg-[#060010] border-neutral-700 border-2 shadow-md ${className}`}
+      tabIndex={0}
+      role="button"
+      aria-haspopup="true"
+    >
+      {Children.map(children, child =>
+        React.isValidElement(child)
+          ? cloneElement(child as React.ReactElement<{ isHovered?: MotionValue<number> }>, { isHovered })
+          : child
+      )}
+    </motion.div>
   );
+}
+
+type DockLabelProps = {
+  className?: string;
+  children: React.ReactNode;
+  isHovered?: MotionValue<number>;
 };
+
+function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isHovered) return;
+    const unsubscribe = isHovered.on('change', latest => {
+      setIsVisible(latest === 1);
+    });
+    return () => unsubscribe();
+  }, [isHovered]);
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: 1, y: -10 }}
+          exit={{ opacity: 0, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className={`${className} absolute -top-6 left-1/2 w-fit whitespace-pre rounded-md border border-neutral-700 bg-[#060010] px-2 py-0.5 text-xs text-white`}
+          role="tooltip"
+          style={{ x: '-50%' }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+type DockIconProps = {
+  className?: string;
+  children: React.ReactNode;
+  isHovered?: MotionValue<number>;
+};
+
+function DockIcon({ children, className = '' }: DockIconProps) {
+  return <div className={`flex items-center justify-center ${className}`}>{children}</div>;
+}
+
+export default function Dock({
+  items,
+  className = '',
+  spring = { mass: 0.1, stiffness: 150, damping: 12 },
+  magnification = 70,
+  distance = 200,
+  panelHeight = 64,
+  dockHeight = 256,
+  baseItemSize = 50
+}: DockProps) {
+  const mouseX = useMotionValue(Infinity);
+  const isHovered = useMotionValue(0);
+
+  const maxHeight = useMemo(() => Math.max(dockHeight, magnification + magnification / 2 + 4), [magnification]);
+  const heightRow = useTransform(isHovered, [0, 1], [panelHeight, maxHeight]);
+  const height = useSpring(heightRow, spring);
+
+  return (
+    <motion.div style={{ height, scrollbarWidth: 'none' }} className="mx-2 flex max-w-full items-center">
+      <motion.div
+        onMouseMove={({ pageX }) => {
+          isHovered.set(1);
+          mouseX.set(pageX);
+        }}
+        onMouseLeave={() => {
+          isHovered.set(0);
+          mouseX.set(Infinity);
+        }}
+        // --------------------------------------------------------
+        // CHANGE 1: Changed 'absolute' to 'fixed'
+        // CHANGE 2: Added 'z-50' to stay on top of other content
+        // CHANGE 3: Added 'text-white' so icons are visible
+        // --------------------------------------------------------
+        className={`${className} fixed bottom-4 left-1/2 transform -translate-x-1/2 flex items-end w-fit gap-4 rounded-2xl border-neutral-700 border-2 pb-2 px-4 z-50 text-white`} 
+        style={{ height: panelHeight }}
+        role="toolbar"
+        aria-label="Application dock"
+      >
+        {items.map((item, index) => (
+          <DockItem
+            key={index}
+            onClick={item.onClick}
+            className={item.className}
+            mouseX={mouseX}
+            spring={spring}
+            distance={distance}
+            magnification={magnification}
+            baseItemSize={baseItemSize}
+          >
+            <DockIcon>{item.icon}</DockIcon>
+            <DockLabel>{item.label}</DockLabel>
+          </DockItem>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
