@@ -44,7 +44,7 @@ export const Navigation: React.FC = () => {
             <img 
               src={logo}
               alt="Vantixio Logo" 
-              className="h-16 w-16 object-contain"
+              className="h-24 w-24 object-contain"
             />
             Vantixio.
           </a>
