@@ -116,7 +116,12 @@
       "@type": "Organization",
       "name": "Vantixio Studio",
       "url": "https://vantixio-studio.com",
-      "logo": "https://vantixio-studio.com/assets/fav.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://vantixio-studio.com/logo.png",
+        "width": 512,
+        "height": 512
+      },
       "description": "We build brands and digital products for startups and enterprises — taking ownership from idea to launch and beyond.",
       "address": {
         "@type": "PostalAddress",
@@ -150,8 +155,12 @@
     }
     </script>
     
-    <!-- Google Search Console Verification (Add your verification code after registering) -->
+    <!-- Google Search Console Verification -->
+    <!-- After getting your code from Search Console, uncomment and paste it here: -->
     <!-- <meta name="google-site-verification" content="your-verification-code-here"> -->
+    
+    <!-- OR place your google verification HTML file in the public/ folder -->
+    <!-- Example: public/google1234567890abcdef.html -->
     
     <style>
       html {

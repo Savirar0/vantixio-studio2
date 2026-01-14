@@ -80,7 +80,12 @@ export const SEO: React.FC<SEOProps> = ({
       "@type": "Organization",
       "name": "Vantixio Studio",
       "url": url,
-      "logo": `${url}/assets/fav.png`,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${url}/logo.png`,
+        "width": 512,
+        "height": 512
+      },
       "description": description,
       "address": {
         "@type": "PostalAddress",
